@@ -1,0 +1,7 @@
+C:\Users\Eduardo\source\repos\ConsoleApp15\client\bin\Debug\client.exe.config
+C:\Users\Eduardo\source\repos\ConsoleApp15\client\bin\Debug\client.exe
+C:\Users\Eduardo\source\repos\ConsoleApp15\client\bin\Debug\client.pdb
+C:\Users\Eduardo\source\repos\ConsoleApp15\client\obj\Debug\client.csproj.AssemblyReference.cache
+C:\Users\Eduardo\source\repos\ConsoleApp15\client\obj\Debug\client.csproj.CoreCompileInputs.cache
+C:\Users\Eduardo\source\repos\ConsoleApp15\client\obj\Debug\client.exe
+C:\Users\Eduardo\source\repos\ConsoleApp15\client\obj\Debug\client.pdb
