@@ -14,20 +14,24 @@ namespace server
         static void Main(string[] args)
         {
             Console.WriteLine("Запустить сервер (1) или клиент (2)?");
-            var choice = Console.ReadLine();
-
-            if (choice == "1")
+            while (true)
             {
-                Server.Start();
-            }
-            else if (choice == "2")
-            {
-                Client.Start();
-            }
-            else
-            {
-                Console.WriteLine("Неверный выбор");
-            }
+                var choice = Console.ReadLine();
+                if (choice == "1")
+                {
+                    Server.Start();
+                    break;
+                }
+                else if (choice == "2")
+                {
+                    Client.Start();
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Неверный выбор");
+                }
+            }           
         }
     }
 
