@@ -5,63 +5,112 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-//ngdfjgnjdf
+using System.Threading;
+
 namespace server
 {
-    internal class server
+    class Program
     {
         static void Main(string[] args)
         {
-            // Устанавливаем для сокета локальную конечную точку
-            IPHostEntry ipHost = Dns.GetHostEntry("localhost");
-            IPAddress ipAddr = ipHost.AddressList[0];
-            IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, 11000);
-            // Создаем сокет Tcp/Ip
-            Socket sListener = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            // Назначаем сокет локальной конечной точке  ислушаем входящие сокеты
+            Console.WriteLine("Запустить сервер (1) или клиент (2)?");
+            var choice = Console.ReadLine();
+
+            if (choice == "1")
+            {
+                Server.Start();
+            }
+            else if (choice == "2")
+            {
+                Client.Start();
+            }
+            else
+            {
+                Console.WriteLine("Неверный выбор");
+            }
+        }
+    }
+
+    public static class Server
+    {
+        public static void Start()
+        {
             try
             {
-                sListener.Bind(ipEndPoint);
-                sListener.Listen(10);
-                // Начинаем слушать соединения
+                IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
+                Socket listener = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                listener.Bind(ipEndPoint);
+                listener.Listen(10);
+                Console.WriteLine($"Сервер запущен на {ipEndPoint}");
+
                 while (true)
                 {
-                    Console.WriteLine("Ожидаем соединение через порт {0}", ipEndPoint); // Программа приостанавливается, ожидая входящее соединение
-                    Socket handler = sListener.Accept();
-                    string data = null;
-                    // Мы дождались клиента, пытающегося с нами соединиться
-                    byte[] bytes = new byte[1024];
-                    int bytesRec = handler.Receive(bytes);
-                    data += Encoding.UTF8.GetString(bytes, 0, bytesRec);
-                    // Показываем данные на консоли
-                    Console.Write("Полученный текст: " + data + "\n\n");
-                    Replacer(ref data); // изменяем сообщение
-                    string reply = $"Спасибо за запрос в {data.Length} символов\n\n{data}\n\nВ сообщениях заменены [] на ()"; // формируем ответ-сообщение
-                    byte[] msg = Encoding.UTF8.GetBytes(reply);
-                    handler.Send(msg);// отправляем ответ клиенту
-                    if (data.IndexOf("<TheEnd>") > -1)
-                    {
-                        Console.WriteLine("Сервер завершил соединение с клиентом.");
-                        break;
-                    }
-                    //отключаем передачу и прием; закрываем соединение
-                    handler.Shutdown(SocketShutdown.Both);
-                    handler.Close();
+                    Socket handler = listener.Accept();
+                    ThreadPool.QueueUserWorkItem(HandleClient, handler);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
+        }
+
+        private static void HandleClient(object state)
+        {
+            Socket handler = (Socket)state;
+            try
+            {
+                byte[] buffer = new byte[1024];
+                int received = handler.Receive(buffer);
+                string data = Encoding.UTF8.GetString(buffer, 0, received);
+
+                Console.WriteLine($"Получено: {data}");
+                Replacer(ref data);
+
+                string reply = $"Ответ сервера ({data.Length} символов):\n{data}\n";
+                handler.Send(Encoding.UTF8.GetBytes(reply));
+            }
             finally
             {
-                Console.ReadLine();
+                handler.Shutdown(SocketShutdown.Both);
             }
         }
-        //Добавленный метод по условию задачи
-        static void Replacer(ref string input)
+
+        private static void Replacer(ref string input)
         {
             input = input.Replace('[', '(').Replace(']', ')');
+        }
+    }
+
+    public static class Client
+    {
+        public static void Start()
+        {
+            try
+            {
+                while (true)
+                {
+                    Console.Write("Введите сообщение (или 'exit' для выхода): ");
+                    string message = Console.ReadLine();
+
+                    if (message.ToLower() == "exit")
+                        break;
+
+                    Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000));
+
+                    client.Send(Encoding.UTF8.GetBytes(message));
+
+                    byte[] buffer = new byte[1024];
+                    int received = client.Receive(buffer);
+                    Console.WriteLine($"Ответ сервера:\n{Encoding.UTF8.GetString(buffer, 0, received)}\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
     }
 }
